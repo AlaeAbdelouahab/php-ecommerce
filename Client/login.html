@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in</title>
+    <style>
+ 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: url('picS613.jpg'); 
+    background-size: cover;
+    background-position: center;
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #32022c;
+}
+
+.login-container {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    padding: 30px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+.login-container:hover {
+    transform: scale(1.05); 
+}
+
+h2 {
+    color: #8e44ad; 
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+}
+
+input[type="email"], input[type="password"] {
+    padding: 10px;
+    border: 1px solid #ab7da6;
+    border-radius: 5px;
+    font-size: 1rem;
+    background-color: #f8f8f8;
+    color: #333;
+}
+
+input[type="email"]:focus, input[type="password"]:focus {
+    border-color: #8e44ad; 
+    outline: none;
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    background-color: #f56b8a; 
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    
+}
+
+button:hover {
+    background-color: #f56b8a; 
+}
+
+.signup-link {
+    margin-top: 20px;
+    font-size: 1rem;
+    color: #8e44ad;
+}
+
+.signup-link a {
+    color: #f56b8a;
+    text-decoration: none;
+}
+
+.signup-link a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+    .login-container {
+        width: 90%;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    button {
+        font-size: 1rem;
+    }
+}
+</style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Login</h2>
+        <form action="dashboard.html" method="POST">
+            <div class="input-group">
+                <label for="email">Email :</label>
+                <input type="email" id="email" name="email" placeholder="Email" required>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password :</label>
+                <input type="password" id="password" name="password" placeholder="Password" required>
+            </div>
+
+            <button type="submit">Login</button>
+        </form>
+
+        <p class="signup-link">Don't have on account ? <a href="inscription.html">Create new account</a></p>
+    </div>
+</body>
+</html>
