@@ -72,29 +72,29 @@
                 <div class="container">
                     <h2 class="section-title">Shop by Category</h2>
                     <div class="categories-grid">
-                        <a href="shop.php?category=Dresses" class="category-card">
+                        <a href="shop.php?category=Dress" class="category-card">
                             <div class="category-image">
                                 <img src="../images/Dresses.png">
                             </div>
                             <h3 class="category-title">Dresses</h3>
                         </a>
-                        <a href="shop.php?category=Tops" class="category-card">
+                        <a href="shop.php?category=Top" class="category-card">
                             <div class="category-image">
                                 <img src="../images/Tops.png">
                             </div>
                             <h3 class="category-title">Tops</h3>
                         </a>
-                        <a href="shop.php?category=Bottoms" class="category-card">
+                        <a href="shop.php?category=Bottom" class="category-card">
                             <div class="category-image">
                                 <img src="../images/Bottoms.png">
                             </div>
                             <h3 class="category-title">Bottoms</h3>
                         </a>
-                        <a href="shop.php?category=Footwear" class="category-card">
+                        <a href="shop.php?category=WinterWear" class="category-card">
                             <div class="category-image">
                                 <img src="../images/Footwear.png">
                             </div>
-                            <h3 class="category-title">Footwear</h3>
+                            <h3 class="category-title">WinterWear</h3>
                         </a>
                     </div>
                 </div>
