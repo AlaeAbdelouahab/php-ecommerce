@@ -17,7 +17,11 @@ $total = 0;
             margin: 0;
             padding: 30px;
         }
-
+ h2::before {
+            content: "🛒";
+            margin-right: 10px;
+            font-size: 2.5rem;
+        }
         .cart {
             max-width: 800px;
             margin: auto;
