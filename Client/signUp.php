@@ -1,215 +1,194 @@
 <?php
 session_start();
 
+$conn = new mysqli('localhost', 'root', '', 'phpshop');
+
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
 $error = '';
+$success = '';
 
-// Lorsqu'on soumet le formulaire
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $firstName = htmlspecialchars($_POST['name']);
-    $lastName = htmlspecialchars($_POST['last']);
+    $firstname = htmlspecialchars($_POST['firstname']);
+    $lastname = htmlspecialchars($_POST['lastname']);
     $email = htmlspecialchars($_POST['email']);
-    $password = htmlspecialchars($_POST['password']);
-    $confirmPassword = htmlspecialchars($_POST['confirm_password']);
+    $password = $_POST['password'];
+    $password_confirm = $_POST['password_confirm'];
 
-    if ($password !== $confirmPassword) {
-        $_SESSION['error'] = "❌ Password and confirmation do not match.";
-        header("Location: " . $_SERVER['PHP_SELF']);
-        exit;
+    // Vérifier si tous les champs sont remplis
+    if (empty($firstname) || empty($lastname) || empty($email) || empty($password) || empty($password_confirm)) {
+        $error = "❌ Tous les champs sont obligatoires.";
+    } elseif ($password !== $password_confirm) {
+        $error = "❌ Les mots de passe ne correspondent pas.";
     } else {
-        // Si tout est ok, on peut afficher les infos
-        echo "<h2 style='text-align:center; color:#db2777;'>Registration Successful</h2>";
-        echo "<div style='text-align:center; font-family:Arial;'>
-                <p><strong>First Name:</strong> $firstName</p>
-                <p><strong>Last Name:</strong> $lastName</p>
-                <p><strong>Email:</strong> $email</p>
-              </div>";
-        session_destroy(); // Nettoyer la session
-        exit;
+        // Vérifie si l'e-mail existe déjà
+        $stmt = $conn->prepare("SELECT idu FROM user WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $stmt->store_result();
+
+        if ($stmt->num_rows > 0) {
+            $error = "❌ Cet e-mail est déjà utilisé.";
+        } else {
+            $stmt = $conn->prepare("INSERT INTO user (firstname, lastname, email, password) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("ssss", $firstname, $lastname, $email, $password);
+
+            if ($stmt->execute()) {
+                $success = "✅ Utilisateur enregistré avec succès !";
+            } else {
+                $error = "Erreur d'insertion : " . $stmt->error;
+            }
+        }
+
+        $stmt->close();
     }
 }
 
-// Récupérer l'erreur si elle existe, et la supprimer juste après
-if (isset($_SESSION['error'])) {
-    $error = $_SESSION['error'];
-    unset($_SESSION['error']);
-}
+$conn->close();
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sign Up</title>
+    <title>User Sign Up</title>
     <style>
-        :root {
-            --pink-50: #fdf2f8;
-            --pink-100: #fce7f3;
-            --pink-200: #fbcfe8;
-            --pink-300: #f9a8d4;
-            --pink-400: #f472b6;
-            --pink-500: #ec4899;
-            --pink-600: #db2777;
-            --pink-700: #be185d;
-            --pink-800: #9d174d;
-            --pink-900: #831843;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            background-color: white;
-            font-family: Arial, sans-serif;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .signup-container {
-            background-color: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border: 2px solid var(--pink-400);
+            width: 400px;
+            margin: 60px auto;
+            padding: 30px;
+            background-color: #fff0f5;
             border-radius: 15px;
-            padding: 25px;
-            width: 100%;
-            max-width: 320px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .signup-container:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 0 20px rgba(255, 105, 180, 0.3);
         }
 
         h2 {
-            color: var(--pink-600);
+            text-align: center;
+            color: #d63384;
             margin-bottom: 10px;
-            font-size: 1.8rem;
         }
 
-        p.subtitle {
-            color: var(--pink-400);
+        .subtitle {
+            text-align: center;
+            color: #888;
             margin-bottom: 20px;
-            font-style: italic;
-            font-size: 0.95rem;
         }
 
         .input-group {
-            margin-bottom: 14px;
-            text-align: left;
+            margin-bottom: 15px;
         }
 
         label {
-            color: var(--pink-800);
-            font-size: 0.95rem;
-            margin-bottom: 4px;
             display: block;
+            margin-bottom: 6px;
+            color: #555;
+        }
+
+        label .required {
+            color: red;
+            margin-left: 4px;
         }
 
         input {
             width: 100%;
-            padding: 9px;
-            border: 1px solid var(--pink-200);
-            border-radius: 5px;
-            font-size: 0.95rem;
-            background-color: var(--pink-50);
-            color: #333;
+            padding: 10px;
+            border: 1px solid #f3c2d3;
+            border-radius: 10px;
+            font-size: 14px;
         }
 
-        input:focus {
-            border-color: var(--pink-500);
-            outline: none;
-        }
-
-        button {
+        button[type="submit"] {
             width: 100%;
-            padding: 11px;
-            background-color: var(--pink-500);
+            padding: 12px;
+            background-color: #ff69b4;
             color: white;
             border: none;
-            border-radius: 5px;
-            font-size: 1rem;
+            border-radius: 12px;
+            font-size: 16px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background 0.3s ease;
         }
 
-        button:hover {
-            background-color: var(--pink-600);
+        button[type="submit"]:hover {
+            background-color: #e055a3;
         }
 
         .login-link {
+            text-align: center;
             margin-top: 15px;
-            font-size: 0.9rem;
-            color: var(--pink-700);
         }
 
         .login-link a {
-            color: var(--pink-600);
+            color: #d63384;
             text-decoration: none;
-            font-weight: bold;
         }
 
         .login-link a:hover {
             text-decoration: underline;
         }
 
-        .error {
-            color: red;
+        .error, .success {
+            text-align: center;
             margin-bottom: 15px;
-            font-style: italic;
-            font-size: 0.9rem;
+            padding: 10px;
+            border-radius: 8px;
         }
 
-        @media (max-width: 500px) {
-            .signup-container {
-                padding: 20px;
-                max-width: 90%;
-            }
+        .error {
+            background-color: #ffccd5;
+            color: #c70039;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
         }
     </style>
 </head>
 <body>
     <form class="signup-container" method="POST" action="">
         <h2>Sign Up</h2>
-        <p class="subtitle">It's free and only takes a minute</p>
+        <p class="subtitle">Create your account</p>
 
-        <?php if (!empty($error)) echo "<p class='error'>$error</p>"; ?>
+        <?php if (!empty($error)) echo "<div class='error'>$error</div>"; ?>
+        <?php if (!empty($success)) echo "<div class='success'>$success</div>"; ?>
 
         <div class="input-group">
-            <label for="name">First Name:</label>
-            <input type="text" id="name" name="name" required>
+            <label for="firstname">First name<span class="required">*</span></label>
+            <input type="text" id="firstname" name="firstname" required>
         </div>
 
         <div class="input-group">
-            <label for="last">Last Name:</label>
-            <input type="text" id="last" name="last" required>
+            <label for="lastname">Last name<span class="required">*</span></label>
+            <input type="text" id="lastname" name="lastname" required>
         </div>
 
         <div class="input-group">
-            <label for="email">Email:</label>
+            <label for="email">Email<span class="required">*</span></label>
             <input type="email" id="email" name="email" required>
         </div>
 
         <div class="input-group">
-            <label for="password">Password:</label>
+            <label for="password">Password<span class="required">*</span></label>
             <input type="password" id="password" name="password" required>
         </div>
 
         <div class="input-group">
-            <label for="confirm_password">Confirm Password:</label>
-            <input type="password" id="confirm_password" name="confirm_password" required>
+            <label for="password_confirm">Confirm Password<span class="required">*</span></label>
+            <input type="password" id="password_confirm" name="password_confirm" required>
         </div>
 
         <button type="submit">Register</button>
 
         <p class="login-link">
-            Already have an account? <a href="login.php">Login here</a>
+            Already registered? <a href="login.php">Login here</a>
         </p>
     </form>
 </body>
