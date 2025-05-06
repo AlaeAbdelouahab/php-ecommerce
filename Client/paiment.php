@@ -3,10 +3,10 @@ $successMessage = '';
 $errorMessage = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $cardType = htmlspecialchars($_POST['card-type']);
-    $cardNumber = htmlspecialchars($_POST['card-number']);
-    $expiryDate = htmlspecialchars($_POST['expiry-date']);
-    $cvv = htmlspecialchars($_POST['cvv']);
+    $cardType = $_POST['card-type'];
+    $cardNumber = $_POST['card-number'];
+    $expiryDate = $_POST['expiry-date'];
+    $cvv = $_POST['cvv'];
 
     if (empty($cardType) || empty($cardNumber) || empty($expiryDate) || empty($cvv)) {
         $errorMessage = "❌ All fields must be filled.";
@@ -147,6 +147,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </form>
 
     <div id="popupMessage" class="popup-message"></div>
+    <a href="Home.php" class="back-link" style="color: #e0529f;">← Continue Shopping</a>
 </div>
 
 <script>
