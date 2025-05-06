@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhpShop - Fashion & Accessories</title>
+    <title>Sweet Girls Fashion - Fashion & Accessories</title>
     <link rel="stylesheet" href="../style/home-styles.css">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -16,7 +16,7 @@
                 <div class="header-content">
                     <!-- Logo -->
                     <div class="logo">
-                        <a href="index.html">PhpShop</a>
+                        <a href="index.html">Sweet Girls Fashion</a>
                     </div>
 
                     <!-- Search Bar -->
@@ -48,7 +48,7 @@
                         <li class="nav-item active"><a href="index.html">Home</a></li>
                         <li class="nav-item"><a href="shop.php">Shop</a></li>
                         <li class="nav-item"><a href="#Categories">Categories</a></li>
-                        <li class="nav-item"><a href="#">About</a></li>
+                        <li class="nav-item"><a href="about.php">About</a></li>
                         <li class="nav-item"><a href="#">Contact</a></li>
                     </ul>
                 </nav>
@@ -60,7 +60,7 @@
             <section class="Welcome-section">
                 <div class="container">
                     <div class="Welcome-content">
-                        <h1 class="Welcome-title">Welcome to PhpStore</h1>
+                        <h1 class="Welcome-title">Welcome to Sweet Girls Fashion</h1>
                         <p class="Welcome-subtitle">Discover the latest trends in fashion and accessories</p>
                         <a href="shop.php" class="Welcome-button">Shop Now</a>
                     </div>
