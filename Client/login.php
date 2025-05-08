@@ -155,6 +155,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             <button type="submit">Login</button>
             <p class="login-link">Don't have an account? <a href="signUp.php">Sign up here</a></p>
+            <a href="Home.php" class="back-link" style="color: #e0529f;">← Continue Shopping</a>
+
         </form>
     </div>
 </body>

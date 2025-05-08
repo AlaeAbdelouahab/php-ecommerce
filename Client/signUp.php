@@ -7,9 +7,9 @@ $error = '';
 $success = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $firstname = htmlspecialchars($_POST['firstname']);
-    $lastname = htmlspecialchars($_POST['lastname']);
-    $email = htmlspecialchars($_POST['email']);
+    $firstname = $_POST['firstname'];
+    $lastname = $_POST['lastname'];
+    $email = $_POST['email'];
     $password = $_POST['password'];
     $password_confirm = $_POST['password_confirm'];
 
@@ -186,6 +186,8 @@ $conn->close();
         <p class="login-link">
             Already registered? <a href="login.php">Login here</a>
         </p>
+        <a href="Home.php" class="back-link" style="color: #e0529f;">← Continue Shopping</a>
+
     </form>
 </body>
 </html>
