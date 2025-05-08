@@ -1,11 +1,7 @@
 <?php
+include '../php/connexion.php';
 session_start();
 
-$conn = new mysqli('localhost', 'root', '', 'phpshop');
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
 
 $error = '';
 $success = '';

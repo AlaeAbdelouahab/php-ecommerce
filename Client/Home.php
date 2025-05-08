@@ -1,3 +1,18 @@
+<?php 
+include '../php/auth.php'; 
+include '../php/connexion.php';
+//number of items in the user basket
+$user_id = null;
+if (isset($_SESSION['idu'])) {
+    $user_id = $_SESSION['idu'];
+} 
+if($user_id){
+    $numprod = mysqli_query($conn, "SELECT count(*) AS product_count FROM basket WHERE user_id=$user_id");
+    $num = mysqli_fetch_assoc($numprod);
+    $i = $num['product_count'];
+} else {$i = 0;}
+?>
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,14 +45,15 @@
 
                     <!-- Icons -->
                     <div class="header-icons">
-                        <a href="login.php" class="icon-button">
+                        <?php if($_SESSION['idu']){echo '<a href="dashboard.php" class="icon-button">';
+                              } else {echo '<a href="login.php" class="icon-button">';} ?>
                             <i class="fas fa-user"></i>
                             <span class="sr-only">Account</span>
                         </a>
                         <a href="panier.php" class="icon-button cart-icon">
                             <i class="fas fa-shopping-basket"></i>
                             <span class="sr-only">Cart</span>
-                            <span class="badge">0</span>
+                            <span class="badge"><?= $i ?></span>
                         </a>
                     </div>
                 </div>

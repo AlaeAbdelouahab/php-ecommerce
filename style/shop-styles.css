@@ -190,6 +190,24 @@ a {
     transition: background-color 0.2s;
 }
 
+.sort-apply-button{
+    display: flex;
+    align-items: center;
+    background-color: #ec4899;
+    color: white;
+    border: none;
+    padding: 0.5rem 0.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.sort-apply-button:hover{
+    background-color: #db2777;
+}
+
 .filter-apply-button:hover{    
     background-color: #db2777;
 }
