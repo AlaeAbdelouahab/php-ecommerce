@@ -12,7 +12,6 @@ if($user_id){
     $i = $num['product_count'];
 } else {$i = 0;}
 ?>
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
