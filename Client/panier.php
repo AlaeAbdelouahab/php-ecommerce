@@ -1,8 +1,59 @@
 <?php
 session_start();
-$cart = $_SESSION['panier'] ?? [];
+include '../php/connexion.php';
+
+if (!isset($_SESSION['idu'])) {
+    header("Location: login.php");
+    exit;
+}
+
+$user_id = $_SESSION['idu'];
+
+// Récupérer les produits du panier
+$cart = [];
 $total = 0;
+$stmt = $conn->prepare("
+    SELECT cart.*, products.name AS product_name, products.price AS product_price
+    FROM cart
+    JOIN products ON cart.product_id = products.id
+    WHERE cart.user_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+while ($row = $result->fetch_assoc()) {
+    $cart[] = [
+        'nom' => $row['product_name'],
+        'prix' => $row['product_price'],
+        'quantite' => $row['quantity'],
+        'product_id' => $row['product_id']
+    ];
+}
+
+// Calculer le total
+foreach ($cart as $item) {
+    $total += $item['quantite'] * $item['prix'];
+}
+
+// Supprimer un produit du panier
+if (isset($_GET['id'])) {
+    $product_id = $_GET['id'];
+
+    // Supprimer l'élément du panier dans la base de données
+    $stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ? AND product_id = ?");
+    $stmt->bind_param("ii", $user_id, $product_id);
+    $stmt->execute();
+
+    // Supprimer l'élément du panier de la session
+    if (isset($_SESSION['panier'][$product_id])) {
+        unset($_SESSION['panier'][$product_id]);
+    }
+
+    header("Location: panier.php");
+    exit;
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -119,25 +170,25 @@ $total = 0;
                 <th>Total</th>
                 <th>Delete</th>
             </tr>
-            <?php foreach ($cart as $id => $item): ?>
+            <?php foreach ($cart as $item): ?>
                 <tr>
-                    <td><?= htmlspecialchars($item['nom']) ?></td>
+                    <td><?= $item['nom'] ?></td>
                     <td><?= $item['quantite'] ?></td>
                     <td><?= $item['prix'] ?> DH</td>
                     <td><?= $item['quantite'] * $item['prix'] ?> DH</td>
                     <td>
-                        <a href="remove.php?id=<?= $id ?>" class="delete-button">🗑️</a>
+                        <!-- Lien pour supprimer l'article du panier -->
+                        <a href="panier.php?id=<?= $item['product_id'] ?>" class="delete-button">🗑️</a>
                     </td>
                 </tr>
-                <?php $total += $item['quantite'] * $item['prix']; ?>
             <?php endforeach; ?>
         </table>
         <div class="total">
             Total: <?= $total ?> DH
         </div>
-        <a href="Home.php" class="checkout">CHECKOUT</a>
         <a href="paiment.php" class="payment">Proceed to Payment</a>
     <?php endif; ?>
+
     <a href="Home.php" class="back-link">← Continue Shopping</a>
 </div>
 </body>
