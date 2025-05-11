@@ -70,6 +70,7 @@ $user_id = null;
 if (isset($_SESSION['idu'])) {
     $user_id = $_SESSION['idu'];
 } 
+$admin = null;
 if (isset($_SESSION['admin'])){
     $admin = 1;
 }
@@ -174,9 +175,15 @@ if($user_id){
                         </div>
                     </form>
 
+                    
                     <div class="product-grid">
-                        <?php 
-                        foreach ($produits as $produit): ?>
+                        <?php if($produits == null): ?>
+                            <div></div>
+                            <div class="message">
+                                no products found!
+                            </div>
+                        <?php endif; ?>
+                        <?php foreach ($produits as $produit): ?>
                             <div class='product-card'>
                                 <a href='product-details.php?id=<?= $produit['id'] ?>' class='product-image'>
                                     <img src='../images/ecom-products/<?= $produit['category'] ?>/<?= $produit['imageURL'] ?>'>
