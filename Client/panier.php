@@ -1,13 +1,16 @@
 <?php
 session_start();
-include '../php/connexion.php';
-
 if (!isset($_SESSION['idu'])) {
     header("Location: login.php");
     exit;
 }
 
 $user_id = $_SESSION['idu'];
+$conn = new mysqli("localhost", "root", "", "phpshop");
+
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
 
 // Récupérer les produits du panier
 $cart = [];
@@ -48,7 +51,6 @@ if (isset($_GET['id'])) {
     if (isset($_SESSION['panier'][$product_id])) {
         unset($_SESSION['panier'][$product_id]);
     }
-
     header("Location: panier.php");
     exit;
 }
@@ -172,7 +174,7 @@ if (isset($_GET['id'])) {
             </tr>
             <?php foreach ($cart as $item): ?>
                 <tr>
-                    <td><?= $item['nom'] ?></td>
+                    <td><?= htmlspecialchars($item['nom']) ?></td>
                     <td><?= $item['quantite'] ?></td>
                     <td><?= $item['prix'] ?> DH</td>
                     <td><?= $item['quantite'] * $item['prix'] ?> DH</td>
