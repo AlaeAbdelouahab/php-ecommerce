@@ -1,14 +1,13 @@
 <?php
 session_start();
+include '../php/connexion.php';
+include '../php/auth.php';
+
 if (!isset($_SESSION['idu'])) {
     header("Location: login.php");
     exit;
 }
 
-$conn = new mysqli("localhost", "root", "", "phpshop");
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
 
 $userId = $_SESSION['idu'];
 $cart = [];
