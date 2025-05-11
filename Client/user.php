@@ -1,6 +1,5 @@
 <?php
 session_start();
-
 if (!isset($_SESSION['idu'])) {
     header("Location: login.php");
     exit;
@@ -8,16 +7,20 @@ if (!isset($_SESSION['idu'])) {
 
 $conn = new mysqli("localhost", "root", "", "phpshop");
 if ($conn->connect_error) {
-    die("Erreur de connexion: " . $conn->connect_error);
+    die("Connection failed: " . $conn->connect_error);
 }
 
 $userId = $_SESSION['idu'];
+$cart = [];
+$total = 0;
 
+// Infos utilisateur
 $stmt = $conn->prepare("SELECT * FROM user WHERE idu = ?");
 $stmt->bind_param("i", $userId);
 $stmt->execute();
 $user = $stmt->get_result()->fetch_assoc();
 
+// Commandes passées
 $orders = [];
 $orderStmt = $conn->prepare("
     SELECT orders.*, products.name AS product_name
@@ -31,75 +34,100 @@ $orderResult = $orderStmt->get_result();
 while ($order = $orderResult->fetch_assoc()) {
     $orders[] = $order;
 }
+
+// Panier récupéré depuis la base de données
+$cartStmt = $conn->prepare("
+    SELECT cart.*, products.name AS product_name, products.price AS product_price
+    FROM cart
+    JOIN products ON cart.product_id = products.id
+    WHERE cart.user_id = ?
+");
+$cartStmt->bind_param("i", $userId);
+$cartStmt->execute();
+$cartResult = $cartStmt->get_result();
+while ($cartItem = $cartResult->fetch_assoc()) {
+    $cart[] = [
+        'nom' => $cartItem['product_name'],
+        'prix' => $cartItem['product_price'],
+        'quantite' => $cartItem['quantity']
+    ];
+}
 ?>
 
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>User Profile</title>
+    <title>User Dashboard</title>
     <style>
-        :root {
-            --pink-500: #ec4899;
-            --pink-600: #db2777;
-            --pink-800: #9d174d;
-            --light-pink: rgb(194, 76, 135);
-            --lighter-pink: #fbcfe8;
-        }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #fff0f5;
+            font-family: 'Segoe UI', sans-serif;
+            background: #fff0f5;
             margin: 0;
-            padding: 0;
         }
-
         header {
-            background-color: var(--light-pink);
+            background: #e0529f;
             color: white;
             padding: 20px;
             text-align: center;
+            position: relative;
         }
-
-        .profile-container {
+        .container {
             padding: 30px;
-            background-color: #fff;
         }
-
-        .profile-container h2 {
-            color: var(--light-pink);
+        h2 {
+            color: #d63384;
         }
-
-        .profile-info p {
-            font-size: 16px;
-            color: #333;
+        .info, .orders, .cart {
+            background: #fff;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(220, 80, 150, 0.15);
         }
-
-        .order-list {
-            margin-top: 30px;
-        }
-
-        .order-item {
-            background-color: #f8d7da;
-            padding: 15px;
-            margin-bottom: 10px;
+        .logout {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #d9534f;
+            color: white;
+            padding: 10px 20px;
             border-radius: 8px;
-            border: 1px solid #f5c6cb;
-        }
-
-        .order-item h4 {
-            color: var(--light-pink);
-        }
-
-        .order-item p {
-            color: #555;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin: 20px;
             text-decoration: none;
-            color: #e0529f;
+        }
+        .logout:hover {
+            background: #c9302c;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #f0c8dd;
+        }
+        th {
+            background-color: #ffe0ec;
+            color: #d63384;
+        }
+        .checkout {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #e0529f;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+        .checkout:hover {
+            background-color: #c9307e;
+        }
+        .back-shop {
+            display: inline-block;
+            margin-top: 10px;
+            text-decoration: none;
+            color: #d63384;
             font-weight: bold;
         }
     </style>
@@ -107,34 +135,59 @@ while ($order = $orderResult->fetch_assoc()) {
 <body>
 
 <header>
-    <h1>Welcome <?= $user['firstname'] ?>!</h1>
+    <h1>Welcome, <?= $user['firstname'] ?> </h1>
+    <a class="logout" href="logout.php">Logout</a>
 </header>
 
-<div class="profile-container">
-    <div class="profile-info">
-        <h2>Your Profile</h2>
-        <p><strong>Name:</strong> <?= htmlspecialchars($user['firstname']) ?> <?= htmlspecialchars($user['lastname']) ?></p>
-        <p><strong>Email:</strong> <?= htmlspecialchars($user['email']) ?></p>
+<div class="container">
+
+    <div class="info">
+        <h2>👤 Your Info</h2>
+        <p><strong>Name:</strong> <?= $user['firstname'] . " " . $user['lastname'] ?></p>
+        <p><strong>Email:</strong> <?= $user['email'] ?></p>
     </div>
 
-    <div class="order-list">
-        <h2>Your Orders</h2>
-        <?php if (count($orders) > 0): ?>
+    <div class="orders">
+        <h2>📦 Your Orders</h2>
+        <?php if ($orders): ?>
             <?php foreach ($orders as $order): ?>
-                <div class="order-item">
-                    <h4>Order <?= $order['order_id'] ?> - <?= htmlspecialchars($order['product_name']) ?></h4>
-                    <p><strong>Quantity:</strong> <?= $order['quantity'] ?></p>
-                    <p><strong>Total:</strong> <?= $order['total_price'] ?> MAD</p>
-                    <p><strong>Date:</strong> <?= $order['order_date'] ?></p>
-                </div>
+                <p><strong><?= htmlspecialchars($order['product_name']) ?></strong> - Qty: <?= $order['quantity'] ?> | <?= $order['total_price'] ?> MAD (<?= $order['order_date'] ?>)</p>
             <?php endforeach; ?>
         <?php else: ?>
-            <p>You have no orders yet.</p>
+            <p>You haven't made any orders yet.</p>
         <?php endif; ?>
     </div>
-</div>
 
-<a href="Home.php" class="back-link">← Continue Shopping</a>
+    <div class="cart">
+        <h2>🛒 Your Cart</h2>
+        <?php if (empty($cart)): ?>
+            <p>Your cart is currently empty.</p>
+        <?php else: ?>
+            <table>
+                <tr>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+                <?php foreach ($cart as $item): ?>
+                    <tr>
+                        <td><?= $item['nom'] ?></td>
+                        <td><?= $item['quantite'] ?></td>
+                        <td><?= $item['prix'] ?> DH</td>
+                        <td><?= $item['quantite'] * $item['prix'] ?> DH</td>
+                    </tr>
+                    <?php $total += $item['quantite'] * $item['prix']; ?>
+                <?php endforeach; ?>
+            </table>
+            <p><strong>Total:</strong> <?= $total ?> DH</p>
+            <a href="paiment.php" class="checkout">Proceed to Payment</a>
+        <?php endif; ?>
+    </div>
+
+    <a href="shop.php" class="back-shop">← Back to Shopping</a>
+
+</div>
 
 </body>
 </html>
