@@ -10,6 +10,10 @@ $user_id = null;
 if (isset($_SESSION['idu'])) {
     $user_id = $_SESSION['idu'];
 } 
+$admin=null;
+if (isset($_SESSION['admin'])){
+    $admin = 1;
+}
 if($user_id){
     $numprod = mysqli_query($conn, "SELECT count(*) AS product_count FROM basket WHERE user_id=$user_id");
     $num = mysqli_fetch_assoc($numprod);
@@ -57,6 +61,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     $conn->close();
 }
+
+if($user_id){
+    $numprod = mysqli_query($conn, "SELECT count(*) AS product_count FROM basket WHERE user_id=$user_id");
+    $num = mysqli_fetch_assoc($numprod);
+    $i = $num['product_count'];
+} else {$i = 0;}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -81,15 +91,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                     <!-- Icons -->
                     <div class="header-icons">
-                        <a href="login.php" class="icon-button">
-                            <i class="fas fa-user"></i>
-                            <span class="sr-only">Account</span>
-                        </a>
-                        <a href="panier.php" class="icon-button cart-icon">
+                        <?php if($user_id){echo '<a href="dashboard.php?id = '. $user_id. '" class="icon-button"><i class="fas fa-user"></i></a>';
+                              } elseif($admin) {echo '<a href="../admin/dashboard.php" class="icon-button">admin dashboard</a><i class="fas fa-user"></i>';
+                              } else {echo '<a href="login.php" class="icon-button"><i class="fas fa-user"></i></a>';} ?>
+                        <?php if(!$admin){ echo '<a href="panier.php" class="icon-button cart-icon">
                             <i class="fas fa-shopping-basket"></i>
                             <span class="sr-only">Cart</span>
-                            <span class="badge"><?= $i ?></span>
-                        </a>
+                            <span class="badge">'. $i. '</span>
+                            </a>';} 
+                        ?>
                     </div>
                 </div>
             </div>

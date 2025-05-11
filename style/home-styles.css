@@ -102,6 +102,13 @@ a {
     display: flex;
     align-items: center;
     gap: 1rem;
+    padding: 0.5rem;
+}
+
+.header-icons i{
+    background: transparent;
+    border: none;
+    color: #ec4899;
 }
 
 .icon-button {

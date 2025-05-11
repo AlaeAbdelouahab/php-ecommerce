@@ -5,26 +5,40 @@ session_start();
 $error = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = htmlspecialchars($_POST["email"]);
-    $password = htmlspecialchars($_POST["password"]);
+    $email = $_POST["email"];
+    $password = $_POST["password"];
 
-    $stmt = $conn->prepare("SELECT * FROM user WHERE email = ?");
-    $stmt->bind_param("s", $email);
+    //verify admin login
+    $stmt = $conn->prepare("SELECT * FROM admin WHERE email = ? AND password = ?");
+    $stmt->bind_param("ss", $email, $password);
     $stmt->execute();
     $result = $stmt->get_result();
-
-    if ($result && $result->num_rows === 1) {
-        $user = $result->fetch_assoc();
-
-        if ($user['password'] === $password) {
-            $_SESSION['idu'] = $user['idu']; 
-            header("Location: dashboard.php");
-            exit;
-        } else {
-            $error = "❌ Incorrect password.";
-        }
+    $admin = $result->fetch_assoc();
+    if($admin){
+        $_SESSION['admin'] = 1;
+        header("Location: ../admin/dashboard.php");
+        exit;
     } else {
-        $error = "❌ Email not found.";
+        
+        $stmt = $conn->prepare("SELECT * FROM user WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        //verify if user exists
+        if ($result && $result->num_rows === 1) {
+            $user = $result->fetch_assoc();
+            //verify password
+            if ($user['password'] === $password) {
+                $_SESSION['idu'] = $user['idu']; 
+                header("Location: dashboard.php");
+                exit;
+            } else {
+                $error = "❌ Incorrect password.";
+            }
+        } else {
+            $error = "❌ Email not found.";
+        }
     }
 }
 ?>
@@ -45,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                display: flex;
+            display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
