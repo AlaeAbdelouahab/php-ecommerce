@@ -1,6 +1,12 @@
 <?php
 session_start();
-
+if (!isset($_SESSION['idu'])) {
+    echo "<script>
+        alert('🛑 You must be logged in to add items to your cart!');
+        window.location.href = 'login.php';
+    </script>";
+    exit;
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = $_POST['id'];
     $nom = $_POST['nom'];
