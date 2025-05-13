@@ -4,165 +4,87 @@ require_once '../php/connexion.php';
 include '../php/auth.php';
 
 // Initialize variables
-$name = $description = $category = $brand = $age_group = $price = $image = "";
-$name_err = $description_err = $category_err = $brand_err = $age_group_err = $price_err = $image_err = "";
+$name = $description = $category = $brand = $age_group = $price = $image = $quantity ="";
+$name_err = $description_err = $category_err = $brand_err = $age_group_err = $price_err = $image_err = $quantity_err = "";
 $success_message = $error_message = "";
 
-// Check if ID parameter exists
-if (isset($_GET["id"]) && !empty($_GET["id"])) {
-    // Get URL parameter
+//get product informations
+if (isset($_GET["id"])) {
     $id = $_GET["id"];
     
-    // Prepare a select statement
     $sql = "SELECT * FROM products WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
     
-    if ($stmt = $conn->prepare($sql)) {
-        // Bind variables to the prepared statement as parameters
-        $stmt->bind_param("i", $id);
-        
-        // Attempt to execute the prepared statement
-        if ($stmt->execute()) {
-            $result = $stmt->get_result();
-            
-            if ($result->num_rows == 1) {
-                // Fetch result row as an associative array
-                $row = $result->fetch_assoc();
-                
-                // Retrieve individual field value
-                $name = $row["name"];
-                $description = $row["description"];
-                $category = $row["category"];
-                $brand = $row["brand"];
-                $age_group = $row["agegroupe"];
-                $price = $row["price"];
-                $image = $row["imageURL"];
-            } else {
-                // URL doesn't contain valid id parameter
-                header("location: admin-products.php");
-                exit();
-            }
-        } else {
-            echo "Oops! Something went wrong. Please try again later.";
-        }
-        
-        // Close statement
-        $stmt->close();
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows == 1) {
+        $row = $result->fetch_assoc();
+        $name = $row["name"];
+        $description = $row["description"];
+        $category = $row["category"];
+        $brand = $row["brand"];
+        $age_group = $row["agegroupe"];
+        $price = $row["price"];
+        $image = $row["imageURL"];
+        $quantity = $row['quantity'];
+    } else {
+        header("location: products.php");
+        exit();
     }
 } else {
-    // URL doesn't contain id parameter
-    header("location: admin-products.php");
+    header("location: products.php");
     exit();
 }
 
-// Process form data when form is submitted
+//update product
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
-    // Validate name
-    if (empty(trim($_POST["name"]))) {
-        $name_err = "Please enter a product name.";
-    } else {
-        $name = trim($_POST["name"]);
-    }
+    if (empty($_POST["name"])) { $name_err = "Please enter a product name.";} 
+    else { $name = $_POST["name"];}
     
-    // Validate description
-    if (empty(trim($_POST["description"]))) {
-        $description_err = "Please enter a product description.";
-    } else {
-        $description = trim($_POST["description"]);
-    }
+    if (empty($_POST["description"])) { $description_err = "Please enter a product description.";}
+    else { $description = $_POST["description"];}
     
-    // Validate category
-    if (empty(trim($_POST["category"]))) {
-        $category_err = "Please select a category.";
-    } else {
-        $category = trim($_POST["category"]);
-    }
+    if (empty($_POST["category"])) { $category_err = "Please select a category.";} 
+    else { $category = $_POST["category"];}
     
-    // Validate brand
-    if (empty(trim($_POST["brand"]))) {
-        $brand_err = "Please enter a brand.";
-    } else {
-        $brand = trim($_POST["brand"]);
-    }
+    if (empty($_POST["brand"])) { $brand_err = "Please enter a brand.";} 
+    else { $brand = $_POST["brand"];}
     
-    // Validate age group
-    if (empty(trim($_POST["age_group"]))) {
-        $age_group_err = "Please select an age group.";
-    } else {
-        $age_group = trim($_POST["age_group"]);
-    }
+    if (empty($_POST["age_group"])) { $age_group_err = "Please select an age group.";} 
+    else { $age_group = $_POST["age_group"];}
     
-    // Validate price
-    if (empty(trim($_POST["price"]))) {
-        $price_err = "Please enter a price.";
-    } elseif (!is_numeric(trim($_POST["price"])) || floatval(trim($_POST["price"])) <= 0) {
-        $price_err = "Please enter a valid price.";
-    } else {
-        $price = trim($_POST["price"]);
-    }
-    
-    // Check if a new image is uploaded
-    $update_image = false;
-    if (isset($_FILES["image"]) && $_FILES["image"]["error"] != UPLOAD_ERR_NO_FILE) {
-        $update_image = true;
-        $allowed_types = array('jpg', 'jpeg', 'png', 'gif');
-        $file_name = $_FILES["image"]["name"];
-        $file_size = $_FILES["image"]["size"];
-        $file_tmp = $_FILES["image"]["tmp_name"];
-        $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
-        
-        if (!in_array($file_ext, $allowed_types)) {
-            $image_err = "Only JPG, JPEG, PNG & GIF files are allowed.";
-        } elseif ($file_size > 5000000) { // 5MB max
-            $image_err = "File size must be less than 5MB.";
+    if (empty($_POST["price"])) { $price_err = "Please enter a price.";}
+    elseif (!is_numeric($_POST["price"]) || floatval($_POST["price"]) <= 0) { $price_err = "Please enter a valid price.";}
+    else { $price = $_POST["price"];}
+
+    if (empty($_POST["quantity"])) { $quantity_err = "Please enter a quantity.";}
+    elseif (!is_numeric($_POST["quantity"]) || floatval($_POST["quantity"]) <= 0) { $quantity_err = "Please enter a valid quantity.";}
+    else { $quantity = $_POST["quantity"];}
+
+    if (isset($_FILES["image"]) && $_FILES["image"]["error"] == 0) {
+        $allowed_types = array('jpg', 'jpeg', 'png');
+        $image = $_FILES["image"]["name"];
+        //check if the file is an image
+        $file_parts = explode('.', $image);
+        $file_extension = strtolower(end($file_parts));
+        if (!(in_array($file_extension, $allowed_types))) {
+            $image_err = 'Only JPG, JPEG, PNG files are allowed:';
         }
-    }
+    } 
     
-    // Check input errors before updating the database
     if (empty($name_err) && empty($description_err) && empty($category_err) && empty($brand_err) && empty($age_group_err) && empty($price_err) && empty($image_err)) {
-        
-        // Prepare an update statement
-        if ($update_image) {
-            // Generate a unique filename
-            $new_image = uniqid() . '.' . $file_ext;
-            $upload_dir = "uploads/products/";
-            $upload_path = $upload_dir . $new_image;
             
-            $sql = "UPDATE products SET name = ?, description = ?, category = ?, brand = ?, agegroupe= ?, price = ?, imageURL = ? WHERE id = ?";
-            if ($stmt = $conn->prepare($sql)) {
-                $stmt->bind_param("sssssdssi", $name, $description, $category, $brand, $age_group, $price, $new_image, $id);
-                
-                if ($stmt->execute()) {
-                    // Move uploaded file
-                    if (move_uploaded_file($file_tmp, $upload_path)) {
-                        // Delete old image if it exists
-                        if (!empty($image) && file_exists($upload_dir . $image)) {
-                            unlink($upload_dir . $image);
-                        }
-                        $image = $new_image; // Update image variable for display
-                        $success_message = "Product updated successfully.";
-                    } else {
-                        $error_message = "Error uploading image.";
-                    }
-                } else {
-                    $error_message = "Something went wrong. Please try again later.";
-                }
-                
-                $stmt->close();
-            }
+        $sql = "UPDATE products SET name = ?, description = ?, category = ?, brand = ?, agegroupe= ?, price = ?, imageURL = ? , quantity = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sssssdsii", $name, $description, $category, $brand, $age_group, $price, $image, $quantity, $id);
+        
+        if ($stmt->execute()) {
+            $success_message = "Product updated successfully.";
         } else {
-            $sql = "UPDATE products SET name = ?, description = ?, category = ?, brand = ?, agegroupe = ?, price = ? WHERE id = ?";
-            if ($stmt = $conn->prepare($sql)) {
-                $stmt->bind_param("sssssdi", $name, $description, $category, $brand, $age_group, $price, $id);
-                
-                if ($stmt->execute()) {
-                    $success_message = "Product updated successfully.";
-                } else {
-                    $error_message = "Something went wrong. Please try again later.";
-                }
-                
-                $stmt->close();
-            }
+            $error_message = "Something went wrong. Please try again later.";
         }
     }
 }
@@ -251,7 +173,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <h3 class="form-title">Edit Product: <?php echo $name; ?></h3>
                     </div>
                     <div class="form-body">
-                        <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"] . "?id=" . $id); ?>" method="post" enctype="multipart/form-data">
+                        <form action="edit-product.php?id=<?=$id?>" method="post" enctype="multipart/form-data">
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label class="form-label">Product Name</label>
@@ -292,6 +214,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <label class="form-label">Price</label>
                                     <input type="text" name="price" class="form-input <?php echo (!empty($price_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $price; ?>">
                                     <span class="invalid-feedback"><?php echo $price_err; ?></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Quantity</label>
+                                    <input type="text" name="quantity" class="form-input <?php echo (!empty($quantity_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $quantity; ?>">
+                                    <span class="invalid-feedback"><?php echo $quantity_err; ?></span>
                                 </div>
                             </div>
                             
