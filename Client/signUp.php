@@ -15,9 +15,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Vérifier si tous les champs sont remplis
     if (empty($firstname) || empty($lastname) || empty($email) || empty($password) || empty($password_confirm)) {
-        $error = "❌ Tous les champs sont obligatoires.";
+        $error = "❌ All fields are required";
     } elseif ($password !== $password_confirm) {
-        $error = "❌ Les mots de passe ne correspondent pas.";
+        $error = "❌ Passwords do not match";
     } else {
         // Vérifie si l'e-mail existe déjà
         $stmt = $conn->prepare("SELECT idu FROM user WHERE email = ?");
@@ -26,15 +26,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->store_result();
 
         if ($stmt->num_rows > 0) {
-            $error = "❌ Cet e-mail est déjà utilisé.";
+            $error = "❌ This email is already in use";
         } else {
             $stmt = $conn->prepare("INSERT INTO user (firstname, lastname, email, password) VALUES (?, ?, ?, ?)");
             $stmt->bind_param("ssss", $firstname, $lastname, $email, $password);
 
             if ($stmt->execute()) {
-                $success = "✅ Utilisateur enregistré avec succès !";
+                $success = "✅ User registered successfully!";
             } else {
-                $error = "Erreur d'insertion : " . $stmt->error;
+                $error = " Insertion error : " . $stmt->error;
             }
         }
 
