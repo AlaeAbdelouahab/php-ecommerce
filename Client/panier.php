@@ -38,19 +38,20 @@ foreach ($cart as $item) {
     $total += $item['quantite'] * $item['prix'];
 }
 
-// Supprimer un produit du panier
+// Supprimer ou décrémenter un produit du panier
 if (isset($_GET['id'])) {
     $product_id = $_GET['id'];
 
-    // Supprimer l'élément du panier dans la base de données
-    $stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ? AND product_id = ?");
+    // Décrémenter la quantité du produit
+    $stmt = $conn->prepare("UPDATE cart SET quantity = quantity - 1 WHERE user_id = ? AND product_id = ?");
     $stmt->bind_param("ii", $user_id, $product_id);
     $stmt->execute();
 
-    // Supprimer l'élément du panier de la session
-    if (isset($_SESSION['panier'][$product_id])) {
-        unset($_SESSION['panier'][$product_id]);
-    }
+    // Si la quantité devient 0, supprimer le produit
+    $stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ? AND product_id = ? AND quantity = 0");
+    $stmt->bind_param("ii", $user_id, $product_id);
+    $stmt->execute();
+
     header("Location: panier.php");
     exit;
 }
@@ -179,7 +180,7 @@ if (isset($_GET['id'])) {
                     <td><?= $item['prix'] ?> DH</td>
                     <td><?= $item['quantite'] * $item['prix'] ?> DH</td>
                     <td>
-                        <!-- Lien pour supprimer l'article du panier -->
+                        <!-- Lien pour supprimer ou décrémenter l'article du panier -->
                         <a href="panier.php?id=<?= $item['product_id'] ?>" class="delete-button">🗑️</a>
                     </td>
                 </tr>
