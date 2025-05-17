@@ -12,24 +12,36 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+// Supprimer un produit du panier
+if (isset($_GET['id'])) {
+    $product_id = $_GET['id'];
+
+    $stmt = $conn->prepare("DELETE FROM basket WHERE user_id = ? AND product_id = ?");
+    $stmt->bind_param("ii", $user_id, $product_id);
+    $stmt->execute();
+
+    header("Location: panier.php");
+    exit;
+}
+
 // Récupérer les produits du panier
 $cart = [];
 $total = 0;
 $stmt = $conn->prepare("
-    SELECT cart.*, products.name AS product_name, products.price AS product_price
-    FROM cart
-    JOIN products ON cart.product_id = products.id
-    WHERE cart.user_id = ?");
+    SELECT basket.*, products.name AS product_name, products.price AS product_price
+    FROM basket
+    JOIN products ON basket.product_id = products.id
+    WHERE basket.user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$result = $stmt->get_result();
+$cartResult = $stmt->get_result();
 
-while ($row = $result->fetch_assoc()) {
+while ($cartItem = $cartResult->fetch_assoc()) {
     $cart[] = [
-        'nom' => $row['product_name'],
-        'prix' => $row['product_price'],
-        'quantite' => $row['quantity'],
-        'product_id' => $row['product_id']
+        'nom' => $cartItem['product_name'],
+        'prix' => $cartItem['product_price'],
+        'quantite' => $cartItem['quantity'],
+        'product_id' => $cartItem['product_id']
     ];
 }
 
@@ -37,26 +49,7 @@ while ($row = $result->fetch_assoc()) {
 foreach ($cart as $item) {
     $total += $item['quantite'] * $item['prix'];
 }
-
-// Supprimer ou décrémenter un produit du panier
-if (isset($_GET['id'])) {
-    $product_id = $_GET['id'];
-
-    // Décrémenter la quantité du produit
-    $stmt = $conn->prepare("UPDATE cart SET quantity = quantity - 1 WHERE user_id = ? AND product_id = ?");
-    $stmt->bind_param("ii", $user_id, $product_id);
-    $stmt->execute();
-
-    // Si la quantité devient 0, supprimer le produit
-    $stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ? AND product_id = ? AND quantity = 0");
-    $stmt->bind_param("ii", $user_id, $product_id);
-    $stmt->execute();
-
-    header("Location: panier.php");
-    exit;
-}
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -180,7 +173,6 @@ if (isset($_GET['id'])) {
                     <td><?= $item['prix'] ?> DH</td>
                     <td><?= $item['quantite'] * $item['prix'] ?> DH</td>
                     <td>
-                        <!-- Lien pour supprimer ou décrémenter l'article du panier -->
                         <a href="panier.php?id=<?= $item['product_id'] ?>" class="delete-button">🗑️</a>
                     </td>
                 </tr>
