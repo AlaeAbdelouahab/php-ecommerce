@@ -31,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             //verify password
             if ($user['password'] === $password) {
                 $_SESSION['idu'] = $user['idu']; 
-                header("Location: dashboard.php");
+                header("Location: user.php");
                 exit;
             } else {
                 $error = "❌ Incorrect password.";

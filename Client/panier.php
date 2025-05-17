@@ -16,10 +16,10 @@ if ($conn->connect_error) {
 $cart = [];
 $total = 0;
 $stmt = $conn->prepare("
-    SELECT cart.*, products.name AS product_name, products.price AS product_price
-    FROM cart
-    JOIN products ON cart.product_id = products.id
-    WHERE cart.user_id = ?");
+    SELECT basket.*, products.name AS product_name, products.price AS product_price
+    FROM basket
+    JOIN products ON basket.product_id = products.id
+    WHERE basket.user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();

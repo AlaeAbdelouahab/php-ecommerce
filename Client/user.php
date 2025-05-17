@@ -1,5 +1,4 @@
 <?php
-session_start();
 include '../php/connexion.php';
 include '../php/auth.php';
 
@@ -36,10 +35,10 @@ while ($order = $orderResult->fetch_assoc()) {
 
 // Panier récupéré depuis la base de données
 $cartStmt = $conn->prepare("
-    SELECT cart.*, products.name AS product_name, products.price AS product_price
-    FROM cart
-    JOIN products ON cart.product_id = products.id
-    WHERE cart.user_id = ?
+    SELECT basket.*, products.name AS product_name, products.price AS product_price
+    FROM basket
+    JOIN products ON basket.product_id = products.id
+    WHERE basket.user_id = ?
 ");
 $cartStmt->bind_param("i", $userId);
 $cartStmt->execute();

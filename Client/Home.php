@@ -48,7 +48,7 @@ if($user_id){
 
                     <!-- Icons -->
                     <div class="header-icons">
-                        <?php if($user_id){echo '<a href="dashboard.php?id = '. $user_id. '" class="icon-button"><i class="fas fa-user"></i></a>';
+                        <?php if($user_id){echo '<a href="user.php" class="icon-button"><i class="fas fa-user"></i></a>';
                               } elseif($admin) {echo '<a href="../admin/dashboard.php" class="icon-button">admin dashboard</a><i class="fas fa-user"></i>';
                               } else {echo '<a href="login.php" class="icon-button"><i class="fas fa-user"></i></a>';} ?>
                         <?php if(!$admin){ echo '<a href="panier.php" class="icon-button cart-icon">
