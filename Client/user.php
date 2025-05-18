@@ -148,12 +148,28 @@ while ($cartItem = $cartResult->fetch_assoc()) {
     <div class="orders">
         <h2>📦 Your Orders</h2>
         <?php if ($orders): ?>
-            <?php foreach ($orders as $order): ?>
-                <p><strong><?= htmlspecialchars($order['product_name']) ?></strong> - Qty: <?= $order['quantity'] ?> | <?= $order['total_price'] ?> MAD (<?= $order['order_date'] ?>)</p>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <p>You haven't made any orders yet.</p>
-        <?php endif; ?>
+    <table>
+        <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Total Price</th>
+            <th>Date</th>
+            <th>Payment ID</th>
+        </tr>
+        <?php foreach ($orders as $order): ?>
+            <tr>
+                <td><?= htmlspecialchars($order['product_name']) ?></td>
+                <td><?= $order['quantity'] ?></td>
+                <td><?= $order['total_price'] ?> MAD</td>
+                <td><?= $order['order_date'] ?></td>
+                <td><?= $order['id_payment'] ?></td>
+            </tr>
+        <?php endforeach; ?>
+    </table>
+<?php else: ?>
+    <p>You haven't made any orders yet.</p>
+<?php endif; ?>
+
     </div>
 
     <div class="cart">
@@ -183,7 +199,7 @@ while ($cartItem = $cartResult->fetch_assoc()) {
         <?php endif; ?>
     </div>
 
-    <a href="shop.php" class="back-shop">← Back to Shopping</a>
+    <a href="shop.php" class="back-shop">← Let's shop </a>
 
 </div>
 
