@@ -12,13 +12,59 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+// Modifier la quantité d'un produit
+if (isset($_GET['action']) && isset($_GET['id'])) {
+    $product_id = (int)$_GET['id'];
+    $action = $_GET['action'];
+
+    // Récupérer la quantité actuelle
+    $stmt = $conn->prepare("SELECT quantity FROM basket WHERE user_id = ? AND product_id = ?");
+    $stmt->bind_param("ii", $user_id, $product_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($row = $result->fetch_assoc()) {
+        $currentQty = (int)$row['quantity'];
+
+        if ($action === 'increase') {
+            $newQty = $currentQty + 1;
+        } elseif ($action === 'decrease') {
+            $newQty = $currentQty - 1;
+            if ($newQty < 1) {
+                // Supprimer le produit si quantité < 1
+                $stmtDel = $conn->prepare("DELETE FROM basket WHERE user_id = ? AND product_id = ?");
+                $stmtDel->bind_param("ii", $user_id, $product_id);
+                $stmtDel->execute();
+                $stmtDel->close();
+                header("Location: panier.php");
+                exit;
+            }
+        } else {
+            $newQty = $currentQty; // Pas de changement si action inconnue
+        }
+
+        // Mettre à jour la quantité si elle a changé
+        if ($newQty !== $currentQty && $newQty >= 1) {
+            $stmtUpdate = $conn->prepare("UPDATE basket SET quantity = ? WHERE user_id = ? AND product_id = ?");
+            $stmtUpdate->bind_param("iii", $newQty, $user_id, $product_id);
+            $stmtUpdate->execute();
+            $stmtUpdate->close();
+        }
+    }
+    $stmt->close();
+
+    // Rediriger pour éviter le rechargement multiple
+    header("Location: panier.php");
+    exit;
+}
+
 // Supprimer un produit du panier
-if (isset($_GET['id'])) {
-    $product_id = $_GET['id'];
+if (isset($_GET['delete_id'])) {
+    $product_id = (int)$_GET['delete_id'];
 
     $stmt = $conn->prepare("DELETE FROM basket WHERE user_id = ? AND product_id = ?");
     $stmt->bind_param("ii", $user_id, $product_id);
     $stmt->execute();
+    $stmt->close();
 
     header("Location: panier.php");
     exit;
@@ -44,6 +90,8 @@ while ($cartItem = $cartResult->fetch_assoc()) {
         'product_id' => $cartItem['product_id']
     ];
 }
+
+$stmt->close();
 
 // Calculer le total
 foreach ($cart as $item) {
@@ -150,6 +198,18 @@ foreach ($cart as $item) {
         .delete-button:hover {
             text-decoration: underline;
         }
+        a.quantity-control {
+            font-weight: bold;
+            text-decoration: none;
+            padding: 5px 10px;
+            background-color: #ff69b4;
+            color: white;
+            border-radius: 4px;
+            user-select: none;
+        }
+        a.quantity-control:hover {
+            background-color: #e0529f;
+        }
     </style>
 </head>
 <body>
@@ -169,11 +229,15 @@ foreach ($cart as $item) {
             <?php foreach ($cart as $item): ?>
                 <tr>
                     <td><?= htmlspecialchars($item['nom']) ?></td>
-                    <td><?= $item['quantite'] ?></td>
+                    <td>
+                        <a href="panier.php?action=decrease&id=<?= $item['product_id'] ?>" class="quantity-control">-</a>
+                        <?= $item['quantite'] ?>
+                        <a href="panier.php?action=increase&id=<?= $item['product_id'] ?>" class="quantity-control">+</a>
+                    </td>
                     <td><?= $item['prix'] ?> DH</td>
                     <td><?= $item['quantite'] * $item['prix'] ?> DH</td>
                     <td>
-                        <a href="panier.php?id=<?= $item['product_id'] ?>" class="delete-button">🗑️</a>
+                        <a href="panier.php?delete_id=<?= $item['product_id'] ?>" class="delete-button" onclick="return confirm('Are you sure you want to remove this product?');">🗑️</a>
                     </td>
                 </tr>
             <?php endforeach; ?>
