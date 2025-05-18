@@ -1,21 +1,47 @@
 <?php
-$successMessage = '';
-$errorMessage = '';
-
+session_start();
+include '../php/connexion.php';
+$successMessage = "";
+$errorMessage= "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $cardType = $_POST['card-type'];
-    $cardNumber = $_POST['card-number'];
-    $expiryDate = $_POST['expiry-date'];
-    $cvv = $_POST['cvv'];
+    $cardType = trim($_POST['card-type']);
+    $cardNumber = trim($_POST['card-number']);
+    $expiryDate = trim($_POST['expiry-date']);
+    $cvv = trim($_POST['cvv']);
 
+    $userId = $_SESSION['user_id'] ?? 1; 
     if (empty($cardType) || empty($cardNumber) || empty($expiryDate) || empty($cvv)) {
         $errorMessage = "❌ All fields must be filled.";
     } else {
-        $successMessage = "✅ Payment was successful.";
+        $conn->begin_transaction();
+        try {
+            // 1. Insérer dans payments
+            $stmt = $conn->prepare("INSERT INTO payments (user_id, card_type, card_number, expiry_date, cvv) VALUES (?, ?, ?, ?, ?)");
+            $stmt->bind_param("issss", $userId, $cardType, $cardNumber, $expiryDate, $cvv);
+            $stmt->execute();
+            $paymentId = $stmt->insert_id;
+            $stmt->close();
+
+            // 2. Insérer dans orders (avec des valeurs d'exemple à adapter)
+            $productId = 1; // Remplace par une valeur logique (ex : produit par défaut)
+            $quantity = 1; // Valeur par défaut
+            $totalPrice = 0.00; 
+            $stmt2 = $conn->prepare("INSERT INTO orders (user_id, product_id, quantity, total_price, order_date, id_payment) VALUES (?, ?, ?, ?, NOW(), ?)");
+            $stmt2->bind_param("iiidi", $userId, $productId, $quantity, $totalPrice, $paymentId);
+            $stmt2->execute();
+            $stmt2->close();
+
+            $conn->commit();
+            $successMessage = "✅ Payment successful and also saved in orders.";
+        } catch (Exception $e) {
+            $conn->rollback();
+            $errorMessage = "❌ Error: " . $e->getMessage();
+        }
     }
 }
-?>
 
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,6 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             align-items: center;
             height: 100vh;
             margin: 0;
+           
         }
 
         .container {
@@ -65,9 +92,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             padding: 12px;
             border: 2px solid #f9a8d4;
             border-radius: 10px;
-            background: #fdf2f8;
+            background: #fff;
             font-size: 1rem;
-            transition: border-color 0.3s;
         }
 
         input:focus,
@@ -86,28 +112,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.3s ease;
         }
 
         button:hover {
             background-color: #db2777;
         }
 
-        .popup-message {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            display: none;
+        .message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 30px;
+            border-radius: 15px;
+            font-size: 1.2rem;
             text-align: center;
+            display: block;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            z-index: 9999;
         }
 
-        .popup-success {
+        .success {
             background-color: #d1fae5;
             color: #065f46;
         }
 
-        .popup-error {
+        .error {
             background-color: #fee2e2;
             color: #991b1b;
         }
@@ -116,69 +146,61 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
 <div class="container">
     <h2>Payment Details</h2>
-    <form method="POST" action="" id="paymentForm">
+    <form method="POST" action="">
         <div class="form-group">
             <label for="card-type">Card Type</label>
             <select id="card-type" name="card-type">
                 <option value="">Select a card</option>
-                <option value="visa">Visa</option>
-                <option value="mastercard">MasterCard</option>
-                <option value="amex">American Express</option>
-                <option value="paypal">PayPal</option>
+                <option value="visa" <?= (isset($cardType) && $cardType == 'visa') ? 'selected' : '' ?>>Visa</option>
+                <option value="mastercard" <?= (isset($cardType) && $cardType == 'mastercard') ? 'selected' : '' ?>>MasterCard</option>
+                <option value="amex" <?= (isset($cardType) && $cardType == 'amex') ? 'selected' : '' ?>>American Express</option>
+                <option value="paypal" <?= (isset($cardType) && $cardType == 'paypal') ? 'selected' : '' ?>>PayPal</option>
             </select>
         </div>
 
         <div class="form-group">
             <label for="card-number">Card Number</label>
-            <input type="text" id="card-number" name="card-number" placeholder="1234 5678 9012 3456">
+            <input type="text" id="card-number" name="card-number" placeholder="1234 5678 9012 3456" value="<?= htmlspecialchars($cardNumber ?? '') ?>">
         </div>
 
         <div class="form-group">
             <label for="expiry-date">Expiry Date</label>
-            <input type="text" id="expiry-date" name="expiry-date" placeholder="MM/YY">
+            <input type="text" id="expiry-date" name="expiry-date" placeholder="MM/YY" value="<?= htmlspecialchars($expiryDate ?? '') ?>">
         </div>
 
         <div class="form-group">
             <label for="cvv">CVV</label>
-            <input type="text" id="cvv" name="cvv" placeholder="123">
+            <input type="text" id="cvv" name="cvv" placeholder="123" value="<?= htmlspecialchars($cvv ?? '') ?>">
         </div>
 
-        <button type="submit" id="payButton">Pay Now</button>
+        <button type="submit">Pay Now</button>
     </form>
 
-    <div id="popupMessage" class="popup-message"></div>
-    <a href="Home.php" class="back-link" style="color: #e0529f;">← Continue Shopping</a>
+    <a href="Home.php" style="display:block; margin-top: 20px; text-align:center; color: #e0529f;">← Continue Shopping</a>
 </div>
 
+<?php if ($successMessage): ?>
+    <div class="message success"><?= $successMessage ?></div>
+<?php elseif ($errorMessage): ?>
+    <div class="message error"><?= $errorMessage ?></div>
+<?php endif; ?>
+
 <script>
-    document.getElementById('paymentForm').addEventListener('submit', function (event) {
-        var cardType = document.getElementById('card-type').value.trim();
-        var cardNumber = document.getElementById('card-number').value.trim();
-        var expiryDate = document.getElementById('expiry-date').value.trim();
-        var cvv = document.getElementById('cvv').value.trim();
-        var popup = document.getElementById('popupMessage');
+  // Cacher automatiquement le message après 30 secondes
+  const successMessage = document.querySelector('.message.success');
+  const errorMessage = document.querySelector('.message.error');
 
-        popup.style.display = "none";
+  function hideAfterTimeout(element, timeout = 3000) {
+    if (element) {
+      setTimeout(() => {
+        element.style.display = 'none';
+      }, timeout);
+    }
+  }
 
-        if (!cardType || !cardNumber || !expiryDate || !cvv) {
-            event.preventDefault();
-            popup.className = 'popup-message popup-error';
-            popup.innerText = "❌ All fields must be filled.";
-            popup.style.display = "block";
-
-            setTimeout(function () {
-                popup.style.display = "none";
-            }, 20000);
-        } else {
-            popup.className = 'popup-message popup-success';
-            popup.innerText = "✅ Payment was successful.";
-            popup.style.display = "block";
-
-            setTimeout(function () {
-                popup.style.display = "none";
-            }, 20000); 
-        }
-    });
+  hideAfterTimeout(successMessage);
+  hideAfterTimeout(errorMessage);
 </script>
+
 </body>
 </html>
