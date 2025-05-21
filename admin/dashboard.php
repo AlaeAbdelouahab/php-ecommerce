@@ -9,7 +9,7 @@ $total_produits = $numproduits['numprod'];
 
 //calculer le revenue total
 $total_revenue = 0;
-$stmt = mysqli_query($conn, "SELECT SUM(p.price * l.Quantite) AS total_revenue FROM lignedecommande l JOIN products p ON l.Refprod = p.id");
+$stmt = mysqli_query($conn, "SELECT SUM(p.price * o.Quantity) AS total_revenue FROM order_details o JOIN products p ON o.product_id = p.id");
 $num = mysqli_fetch_assoc($stmt);
 $total_revenue += $num['total_revenue'];
 
