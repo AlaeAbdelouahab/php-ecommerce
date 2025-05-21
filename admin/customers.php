@@ -65,7 +65,7 @@ if ($result->num_rows > 0) {
             </nav>
             
             <div class="sidebar-footer">
-                <a href="logout.php" class="logout-btn">
+                <a href="../php/logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>

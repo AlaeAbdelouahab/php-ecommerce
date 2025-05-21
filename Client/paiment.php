@@ -1,6 +1,10 @@
 <?php
-session_start();
 include '../php/connexion.php';
+include '../php/auth.php';
+$user_id = null;
+if (isset($_SESSION['idu'])) {
+    $user_id = $_SESSION['idu'];
+} 
 $successMessage = "";
 $errorMessage= "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -8,33 +12,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $cardNumber = trim($_POST['card-number']);
     $expiryDate = trim($_POST['expiry-date']);
     $cvv = trim($_POST['cvv']);
-
-    $userId = $_SESSION['user_id'] ?? 1; 
     if (empty($cardType) || empty($cardNumber) || empty($expiryDate) || empty($cvv)) {
         $errorMessage = "❌ All fields must be filled.";
     } else {
-        $conn->begin_transaction();
         try {
-            // 1. Insérer dans payments
-            $stmt = $conn->prepare("INSERT INTO payments (user_id, card_type, card_number, expiry_date, cvv) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param("issss", $userId, $cardType, $cardNumber, $expiryDate, $cvv);
-            $stmt->execute();
-            $paymentId = $stmt->insert_id;
-            $stmt->close();
+            $cart = [];
+            $total = 0;
+            $stmt = $conn->query("SELECT basket.*, products.name AS product_name, products.price AS product_price FROM basket JOIN products ON basket.product_id = products.id WHERE basket.user_id = $user_id");
 
-            // 2. Insérer dans orders (avec des valeurs d'exemple à adapter)
-            $productId = 1; // Remplace par une valeur logique (ex : produit par défaut)
-            $quantity = 1; // Valeur par défaut
-            $totalPrice = 0.00; 
-            $stmt2 = $conn->prepare("INSERT INTO orders (user_id, product_id, quantity, total_price, order_date, id_payment) VALUES (?, ?, ?, ?, NOW(), ?)");
-            $stmt2->bind_param("iiidi", $userId, $productId, $quantity, $totalPrice, $paymentId);
-            $stmt2->execute();
-            $stmt2->close();
+            while ($row = $stmt->fetch_assoc()) {
+                $cart[] = $row;
+            }
 
-            $conn->commit();
+            // Calculer le total
+            foreach ($cart as $item) {
+                $total += $item['quantity'] * $item['product_price'];
+            }
+
+            //create order
+            $sql = "INSERT INTO orders(user_id, total_price) VALUES ($user_id, $total)";
+            $stmt = $conn->query($sql);
+            $order_id = $conn->insert_id;
+
+            //order details
+            foreach ($cart as $product) {
+                $product_id = $product['product_id'];
+                $color = $product['color'];
+                $size = $product['size'];
+                $quantity = $product['quantity'];
+                
+                $sql = "INSERT INTO order_details(user_id, product_id, color, size, quantity, order_id) VALUES ($user_id, $product_id, '$color', '$size', $quantity, $order_id)";
+                $conn->query($sql);
+            }
             $successMessage = "✅ Payment successful and also saved in orders.";
         } catch (Exception $e) {
-            $conn->rollback();
             $errorMessage = "❌ Error: " . $e->getMessage();
         }
     }

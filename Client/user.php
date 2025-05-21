@@ -20,16 +20,8 @@ $user = $stmt->get_result()->fetch_assoc();
 
 // Commandes passées
 $orders = [];
-$orderStmt = $conn->prepare("
-    SELECT orders.*, products.name AS product_name
-    FROM orders
-    JOIN products ON orders.product_id = products.id
-    WHERE orders.user_id = ?
-");
-$orderStmt->bind_param("i", $userId);
-$orderStmt->execute();
-$orderResult = $orderStmt->get_result();
-while ($order = $orderResult->fetch_assoc()) {
+$result = $conn->query("SELECT orders.* FROM orders WHERE orders.user_id = $userId");
+while ($order = mysqli_fetch_assoc($result)) {
     $orders[] = $order;
 }
 
@@ -150,19 +142,17 @@ while ($cartItem = $cartResult->fetch_assoc()) {
         <?php if ($orders): ?>
     <table>
         <tr>
-            <th>Product</th>
-            <th>Quantity</th>
+            <th>order id</th>
+            <th>date</th>
             <th>Total Price</th>
-            <th>Date</th>
-            <th>Payment ID</th>
+            <th>status</th>
         </tr>
         <?php foreach ($orders as $order): ?>
             <tr>
-                <td><?= htmlspecialchars($order['product_name']) ?></td>
-                <td><?= $order['quantity'] ?></td>
-                <td><?= $order['total_price'] ?> MAD</td>
+                <td><?= $order['order_id'] ?></td>
                 <td><?= $order['order_date'] ?></td>
-                <td><?= $order['id_payment'] ?></td>
+                <td><?= $order['total_price'] ?> MAD</td>
+                <td><?= $order['status'] ?></td>
             </tr>
         <?php endforeach; ?>
     </table>

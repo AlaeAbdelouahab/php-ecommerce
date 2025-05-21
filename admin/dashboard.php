@@ -19,7 +19,7 @@ $num = mysqli_fetch_assoc($stmt);
 $total_customers = $num['total_customers'];
 
 //get all commandes
-$stmt = mysqli_query($conn, "SELECT c.id, c.Date, c.NumClt, c.status, c.prixtotal, u.firstname, u.lastname FROM commande c JOIN user u ON c.NumClt = u.idu");
+$stmt = mysqli_query($conn, "SELECT o.order_id, o.user_id, o.total_price, o.order_date, o.status, u.firstname as firstname, u.lastname as lastname FROM orders o JOIN user u ON o.user_id = u.idu");
 $commandes = [];
 while($row = mysqli_fetch_assoc($stmt)){
     $commandes[] = $row;
@@ -139,15 +139,20 @@ while($row = mysqli_fetch_assoc($stmt)){
                                 <tbody>
                                     <?php foreach($commandes as $commande): ?>
                                         <tr>
-                                            <td><?= $cammande['c.id'] ?></td>
+                                            <td><?= $commande['order_id'] ?></td>
                                             <td>
                                                 <div class="customer-info">
-                                                    <span><?= $commande['u.firstname']. ' '. $commande['u.lastname'] ?></span>
+                                                    <span><?= $commande['firstname']. ' '. $commande['lastname'] ?></span>
                                                 </div>
                                             </td>
-                                            <td><?= $commande['c.Date'] ?></td>
-                                            <td><?= $commande['c.prixtotal'] ?></td>
-                                            <td><span class="status-badge completed"><?= $commande['c.status'] ?></span></td>
+                                            <td><?= $commande['order_date'] ?></td>
+                                            <td><?= $commande['total_price'] ?></td>
+                                            <td><select><option><?= $commande['status'] ?></option>
+                                                        <option> in progress </option>
+                                                        <option> shipped </option>
+                                                        <option> delivered </option>
+                                                        <option> completed </option>
+                                                </select></td>
                                             <td>
                                                 <div class="action-buttons">
                                                     <a href="#" class="action-btn view-btn" title="View Order">

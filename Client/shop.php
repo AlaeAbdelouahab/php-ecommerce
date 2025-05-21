@@ -65,6 +65,23 @@ if(isset($_POST['sort-select'])){
         $_SESSION['sort'] = $sort;
 }
 
+//search for products
+if(isset($_POST['search'])){
+    $produits = [];
+    $search = "%". $_POST['search']. "%";
+    $query = "SELECT * from products WHERE name LIKE ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("s", $search);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if($result->num_rows > 0){
+        while($row = $result->fetch_assoc()){
+            $produits[] = $row;
+        }
+    }
+}
+
 //number of items in the user basket
 $user_id = null;
 if (isset($_SESSION['idu'])) {
@@ -94,11 +111,12 @@ if($user_id){
         <div class="container">
             <div class="header-content">
                 <div class="logo"><a href="Home.php">PhpShop</a></div>
-
-                <div class="search-bar">
-                    <input type="search" placeholder="Search products...">
-                    <button class="search-button"><i class="fas fa-search"></i></button>
-                </div>
+                <form method="POST" action="">
+                    <div class="search-bar">
+                        <input type="search" name="search" placeholder="Search products...">
+                        <button class="search-button"><i class="fas fa-search"></i></button>
+                    </div>
+                </form>
 
                 <div class="header-icons">
                     <?php if($user_id){echo '<a href="user.php" class="icon-button"><i class="fas fa-user"></i></a>';
