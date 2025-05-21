@@ -131,7 +131,7 @@ while($row = mysqli_fetch_assoc($stmt)){
                                         <th>Order ID</th>
                                         <th>Customer</th>
                                         <th>Date</th>
-                                        <th>Amount</th>
+                                        <th>Total</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
@@ -155,7 +155,7 @@ while($row = mysqli_fetch_assoc($stmt)){
                                                 </select></td>
                                             <td>
                                                 <div class="action-buttons">
-                                                    <a href="#" class="action-btn view-btn" title="View Order">
+                                                    <a href="order-details.php?id=<?= $commande['order_id']?>" class="action-btn view-btn" title="View Order">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
                                                 </div>
